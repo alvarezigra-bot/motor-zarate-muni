@@ -1,0 +1,38 @@
+name: Actualización Automática ZET (Lunes)
+
+on:
+  schedule:
+    # Se ejecuta todos los lunes a las 03:00 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde la web de GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalar dependencias
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Ejecutar Scrapers de Auditoría
+        run: |
+          python scripts/muni_scraper_total.py
+          python scripts/muni_licitaciones.py
+          # Aquí agregaremos el de Provincia cuando esté listo
+          python scripts/muni_deep_finance.py
+
+      - name: Commit y Push de nuevos datos
+        run: |
+          git config --global user.name "ZET Bot Auditor"
+          git config --global user.email "zet-bot@zarate-emergente.org"
+          git add .
+          git commit -m "🤖 Actualización automática: Datos del lunes $(date +'%Y-%m-%d')" || exit 0
+          git push
